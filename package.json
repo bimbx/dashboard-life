@@ -57,7 +57,19 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
+<<<<<<< HEAD
     "zod": "^3.24.1"
+=======
+    "zod": "^3.24.1",
+    "@auth/core": "latest",
+    "nodemailer": "latest",
+    "@prisma/client": "latest",
+    "prisma": "latest",
+    "next-auth": "latest",
+    "@auth/prisma-adapter": "latest",
+    "bcryptjs": "latest",
+    "react-error-boundary": "latest"
+>>>>>>> a251471 (Second try nextauth.js)
   },
   "devDependencies": {
     "@types/node": "^22",

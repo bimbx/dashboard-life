@@ -1,7 +1,13 @@
 "use client"
 
+<<<<<<< HEAD
 import { useState } from "react"
 import { Plus, RefreshCcw, Settings } from "lucide-react"
+=======
+import { useState, useEffect } from "react"
+import { Plus, RefreshCcw, Settings, Loader2, AlertCircle, Check } from "lucide-react"
+import { useSession } from "next-auth/react"
+>>>>>>> a251471 (Second try nextauth.js)
 
 interface Habit {
   id: string
@@ -10,6 +16,7 @@ interface Habit {
   streak: number
   color: string
   timeOfDay: "morning" | "afternoon" | "evening" | "night" | "any"
+<<<<<<< HEAD
 }
 
 export default function HabitTracker() {
@@ -18,12 +25,23 @@ export default function HabitTracker() {
     { id: "2", name: "Read", completed: true, streak: 12, color: "#00cec9", timeOfDay: "evening" },
     { id: "3", name: "Exercise", completed: false, streak: 3, color: "#ff7675", timeOfDay: "afternoon" },
   ])
+=======
+  userId: string
+}
+
+export default function HabitTracker() {
+  const { data: session } = useSession()
+  const [habits, setHabits] = useState<Habit[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+>>>>>>> a251471 (Second try nextauth.js)
 
   const [showHabitForm, setShowHabitForm] = useState(false)
   const [newHabitName, setNewHabitName] = useState("")
   const [newHabitColor, setNewHabitColor] = useState("#6c5ce7")
   const [newHabitTime, setNewHabitTime] = useState<Habit["timeOfDay"]>("any")
 
+<<<<<<< HEAD
   const toggleHabit = (id: string) => {
     setHabits(
       habits.map((habit) => {
@@ -55,6 +73,106 @@ export default function HabitTracker() {
     setHabits([...habits, newHabit])
     setNewHabitName("")
     setShowHabitForm(false)
+=======
+  // Fetch habits when component mounts
+  useEffect(() => {
+    fetchHabits()
+  }, [session])
+
+  const fetchHabits = async () => {
+    if (!session) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/habits")
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch habits")
+      }
+
+      const data = await response.json()
+      setHabits(data)
+    } catch (err) {
+      console.error("Error fetching habits:", err)
+      setError("Failed to load habits. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleHabit = async (id: string) => {
+    const habitToUpdate = habits.find((habit) => habit.id === id)
+    if (!habitToUpdate) return
+
+    const updatedCompleted = !habitToUpdate.completed
+    const updatedStreak = updatedCompleted ? habitToUpdate.streak + 1 : habitToUpdate.streak
+
+    try {
+      const response = await fetch(`/api/habits/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completed: updatedCompleted,
+          streak: updatedStreak,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update habit")
+      }
+
+      // Update local state
+      setHabits(
+        habits.map((habit) => {
+          if (habit.id === id) {
+            return {
+              ...habit,
+              completed: updatedCompleted,
+              streak: updatedStreak,
+            }
+          }
+          return habit
+        }),
+      )
+    } catch (err) {
+      console.error("Error updating habit:", err)
+      setError("Failed to update habit. Please try again.")
+    }
+  }
+
+  const addHabit = async () => {
+    if (!newHabitName.trim()) return
+
+    try {
+      const response = await fetch("/api/habits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newHabitName,
+          color: newHabitColor,
+          timeOfDay: newHabitTime,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create habit")
+      }
+
+      const newHabit = await response.json()
+      setHabits([newHabit, ...habits])
+      setNewHabitName("")
+      setShowHabitForm(false)
+    } catch (err) {
+      console.error("Error creating habit:", err)
+      setError("Failed to create habit. Please try again.")
+    }
+>>>>>>> a251471 (Second try nextauth.js)
   }
 
   const getTimeIcon = (time: Habit["timeOfDay"]) => {
@@ -72,6 +190,26 @@ export default function HabitTracker() {
     }
   }
 
+<<<<<<< HEAD
+=======
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 text-[#6c5ce7] animate-spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/50 rounded-md p-4 text-red-500">
+        <AlertCircle className="w-5 h-5 inline mr-2" />
+        {error}
+      </div>
+    )
+  }
+
+>>>>>>> a251471 (Second try nextauth.js)
   return (
     <div className="bg-[#1e1e1e] rounded-xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-6">
@@ -157,6 +295,7 @@ export default function HabitTracker() {
                   style={{ backgroundColor: habit.completed ? habit.color : "transparent", borderColor: habit.color }}
                   onClick={() => toggleHabit(habit.id)}
                 >
+<<<<<<< HEAD
                   {habit.completed && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
@@ -168,6 +307,9 @@ export default function HabitTracker() {
                       />
                     </svg>
                   )}
+=======
+                  {habit.completed && <Check className="w-4 h-4 text-white" />}
+>>>>>>> a251471 (Second try nextauth.js)
                 </button>
 
                 <div className="flex-1">

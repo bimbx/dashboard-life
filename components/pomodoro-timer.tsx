@@ -1,5 +1,6 @@
 "use client"
 
+<<<<<<< HEAD
 import { useState, useEffect, useRef } from "react"
 import { Timer, Play, Pause, Settings, X, Plus, Check } from "lucide-react"
 
@@ -40,10 +41,63 @@ export default function PomodoroTimer() {
   }, [])
 
   const startTimer = () => {
+=======
+import { useState, useEffect, useRef, useCallback } from "react"
+import { Timer, Play, Pause, RotateCcw } from "lucide-react"
+import { useSession } from "next-auth/react"
+
+export default function PomodoroTimer() {
+  const { data: session } = useSession()
+  const [status, setStatus] = useState<"ready" | "active" | "paused" | "done">("ready")
+  const [timeLeft, setTimeLeft] = useState(25 * 60) // 25 minutes in seconds
+  const [completedPomodoros, setCompletedPomodoros] = useState(0)
+  const [dailyGoal, setDailyGoal] = useState(8)
+  const [error, setError] = useState<string | null>(null)
+
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Load user's pomodoro data
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    // Initialize audio
+    audioRef.current = new Audio("/notification.mp3")
+
+    // Load completed pomodoros from localStorage
+    try {
+      const today = new Date().toISOString().split("T")[0] // YYYY-MM-DD
+      const key = `pomodoros-${session.user.id}-${today}`
+
+      const savedCompletedPomodoros = localStorage.getItem(key)
+      if (savedCompletedPomodoros) {
+        setCompletedPomodoros(Number(savedCompletedPomodoros))
+      }
+
+      const savedDailyGoal = localStorage.getItem(`dailyGoal-${session.user.id}`)
+      if (savedDailyGoal) {
+        setDailyGoal(Number(savedDailyGoal))
+      }
+    } catch (error) {
+      console.error("Error loading pomodoro data:", error)
+      setError("Failed to load pomodoro data")
+    }
+
+    // Clean up interval on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [session?.user?.id])
+
+  const startTimer = useCallback(() => {
+>>>>>>> a251471 (Second try nextauth.js)
     if (status === "paused") {
       setStatus("active")
     } else if (status === "ready" || status === "done") {
       setStatus("active")
+<<<<<<< HEAD
       setTimeLeft(settings.pomodoroMinutes * 60)
     }
   }
@@ -83,6 +137,102 @@ export default function PomodoroTimer() {
 
     return () => clearInterval(interval)
   }, [status, timeLeft, settings.ambientSound])
+=======
+      setTimeLeft(25 * 60)
+    }
+  }, [status])
+
+  const pauseTimer = useCallback(() => {
+    if (status === "active") {
+      setStatus("paused")
+    }
+  }, [status])
+
+  const resetTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    setStatus("ready")
+    setTimeLeft(25 * 60)
+  }, [])
+
+  // Handle timer countdown
+  useEffect(() => {
+    if (status === "active") {
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+
+      // Set up new interval
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Timer complete
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current)
+              intervalRef.current = null
+            }
+
+            // Play notification sound
+            if (audioRef.current) {
+              audioRef.current.play().catch((e) => console.log("Audio play failed:", e))
+            }
+
+            // Update completed pomodoros
+            const newCount = completedPomodoros + 1
+            setCompletedPomodoros(newCount)
+
+            // Save to localStorage
+            if (session?.user?.id) {
+              const today = new Date().toISOString().split("T")[0] // YYYY-MM-DD
+              const key = `pomodoros-${session.user.id}-${today}`
+              localStorage.setItem(key, String(newCount))
+
+              // Update pomodoro activity data
+              try {
+                const pomodoroDataKey = `pomodoroData-${session.user.id}`
+                const storedData = localStorage.getItem(pomodoroDataKey)
+
+                if (storedData) {
+                  const data = JSON.parse(storedData)
+                  const currentDate = new Date()
+                  const monthKey = currentDate.toLocaleDateString("default", { month: "short" })
+                  const dayKey = currentDate.getDate().toString()
+
+                  if (!data[monthKey]) {
+                    data[monthKey] = {}
+                  }
+
+                  data[monthKey][dayKey] = (data[monthKey][dayKey] || 0) + 1
+                  localStorage.setItem(pomodoroDataKey, JSON.stringify(data))
+                }
+              } catch (error) {
+                console.error("Error updating pomodoro activity data:", error)
+              }
+            }
+
+            setStatus("done")
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else if (status !== "active" && intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+
+    // Clean up on unmount or status change
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [status, completedPomodoros, session?.user?.id])
+>>>>>>> a251471 (Second try nextauth.js)
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -90,6 +240,7 @@ export default function PomodoroTimer() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
+<<<<<<< HEAD
   const addTodo = () => {
     if (!newTodo.trim()) return
 
@@ -115,12 +266,15 @@ export default function PomodoroTimer() {
     }
   }
 
+=======
+>>>>>>> a251471 (Second try nextauth.js)
   return (
     <div className="bg-[#1e1e1e] rounded-xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <Timer className="w-5 h-5 text-[#ff4d4d] mr-2" />
           <h2 className="text-lg font-semibold">
+<<<<<<< HEAD
             Pomodoro {completedPomodoros}/{settings.dailyGoal}
           </h2>
         </div>
@@ -303,16 +457,66 @@ export default function PomodoroTimer() {
             <button className="px-4 py-2 rounded-md bg-[#333] text-white hover:bg-[#444]" onClick={cancelPomodoro}>
               Cancel pomodoro
             </button>
+=======
+            Pomodoro {completedPomodoros}/{dailyGoal}
+          </h2>
+        </div>
+      </div>
+
+      {error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-md text-red-500">{error}</div>}
+
+      {status === "active" || status === "paused" ? (
+        <div className="flex flex-col items-center">
+          <div className="w-32 h-32 rounded-full border-4 border-[#ff4d4d] flex items-center justify-center mb-4 relative">
+            <div className="text-2xl font-bold">{formatTime(timeLeft)}</div>
+            <div className="absolute -bottom-2 flex space-x-2">
+              <button
+                className="w-10 h-10 rounded-full bg-[#ff4d4d] flex items-center justify-center text-white"
+                onClick={status === "active" ? pauseTimer : startTimer}
+                aria-label={status === "active" ? "Pause timer" : "Resume timer"}
+              >
+                {status === "active" ? <Pause size={20} /> : <Play size={20} />}
+              </button>
+              <button
+                className="w-10 h-10 rounded-full bg-[#333] flex items-center justify-center text-white"
+                onClick={resetTimer}
+                aria-label="Reset timer"
+              >
+                <RotateCcw size={20} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex space-x-1 mb-2">
+            {Array.from({ length: dailyGoal }).map((_, index) => (
+              <div
+                key={`goal-${index}`}
+                className={`w-2 h-2 rounded-full ${index < completedPomodoros ? "bg-[#ff4d4d]" : "bg-gray-600"}`}
+                aria-hidden="true"
+              />
+            ))}
+>>>>>>> a251471 (Second try nextauth.js)
           </div>
         </div>
       ) : (
         <div className="flex flex-col items-center">
           {completedPomodoros === 0 ? (
             <div className="text-center py-8">
+<<<<<<< HEAD
               <Timer size={40} className="mx-auto text-gray-500 mb-4" />
               <p className="text-gray-400">No pomodoros for this day</p>
               <p className="text-sm text-gray-500">Time to start one!</p>
               <button className="mt-4 px-4 py-2 rounded-md bg-[#ff4d4d] text-white" onClick={startTimer}>
+=======
+              <Timer size={40} className="mx-auto text-gray-500 mb-4" aria-hidden="true" />
+              <p className="text-gray-400">No pomodoros for today</p>
+              <p className="text-sm text-gray-500">Time to start one!</p>
+              <button
+                className="mt-4 px-4 py-2 rounded-md bg-[#ff4d4d] text-white"
+                onClick={startTimer}
+                aria-label="Start Pomodoro"
+              >
+>>>>>>> a251471 (Second try nextauth.js)
                 Start Pomodoro
               </button>
             </div>
@@ -320,7 +524,15 @@ export default function PomodoroTimer() {
             <div className="text-center py-6">
               <div className="text-2xl font-bold text-[#ff4d4d] mb-2">Pomodoro Complete!</div>
               <p className="text-gray-400 mb-4">You've completed {completedPomodoros} pomodoros today</p>
+<<<<<<< HEAD
               <button className="px-4 py-2 rounded-md bg-[#ff4d4d] text-white" onClick={startTimer}>
+=======
+              <button
+                className="px-4 py-2 rounded-md bg-[#ff4d4d] text-white"
+                onClick={startTimer}
+                aria-label="Start Another Pomodoro"
+              >
+>>>>>>> a251471 (Second try nextauth.js)
                 Start Another
               </button>
             </div>
