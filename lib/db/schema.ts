@@ -82,11 +82,9 @@ export const verificationTokens = pgTable(
   },
   (table) => {
     return {
-      compoundKey: table.primaryKey({ columns: [table.identifier, table.token] }),
+      compoundKey: index("verification_tokens_identifier_token_idx").on(table.identifier, table.token),
     }
-  },
-)
-
+  },)
 // Tasks
 export const tasks = pgTable(
   "tasks",
